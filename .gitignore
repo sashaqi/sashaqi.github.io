@@ -7,7 +7,6 @@
 # Keeping these out of git history is what stops vault content from
 # becoming permanent in a public repo.
 /content/posts/
-/content/_index.md
 /static/images/
 
 # Local vault checkout used by CI

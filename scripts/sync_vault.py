@@ -24,7 +24,6 @@ import yaml
 PUBLIC_DIR = "05-Public"
 POSTS_OUT = Path("content/posts")
 STATIC_IMG_OUT = Path("static/images")
-HOME_OUT = Path("content/_index.md")
 
 # Attachments we're willing to copy into the public site.
 ASSET_SUFFIXES = {
@@ -103,8 +102,9 @@ def collect_notes(public_root: Path) -> tuple[dict, list]:
         raw = path.read_text(encoding="utf-8")
         meta, body = split_frontmatter(raw)
 
+        # No landing page: the site root is the post list. Any _index.md in
+        # the vault is deliberately ignored.
         if path.name == "_index.md":
-            notes.append({"path": path, "meta": meta, "body": body, "home": True})
             continue
 
         if not is_published(meta):
@@ -123,7 +123,7 @@ def collect_notes(public_root: Path) -> tuple[dict, list]:
 
         notes.append({
             "path": path, "meta": meta, "body": body,
-            "title": title, "slug": slug, "home": False,
+            "title": title, "slug": slug,
             "section": rel.parts[0] if len(rel.parts) > 1 else None,
         })
 
@@ -202,15 +202,6 @@ def write_post(note: dict, body: str) -> None:
     print(f"  + {out}  ({front['date']})")
 
 
-def write_home(note: dict, body: str) -> None:
-    meta = note["meta"]
-    front = {"title": meta.get("title", "Home")}
-    HOME_OUT.parent.mkdir(parents=True, exist_ok=True)
-    rendered = yaml.safe_dump(front, sort_keys=False, allow_unicode=True).strip()
-    HOME_OUT.write_text(f"---\n{rendered}\n---\n\n{body.strip()}\n", encoding="utf-8")
-    print(f"  + {HOME_OUT} (home)")
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--vault", required=True, type=Path, help="path to the vault root")
@@ -226,13 +217,12 @@ def main() -> int:
     print(f"Reading {public_root}")
     index, notes = collect_notes(public_root)
     assets = collect_assets(vault)
-    print(f"Found {len([n for n in notes if not n['home']])} publishable notes, "
+    print(f"Found {len(notes)} publishable notes, "
           f"{len(assets)} candidate attachments")
 
     if args.dry_run:
         for note in notes:
-            if not note["home"]:
-                print(f"  would write content/posts/{note['slug']}.md")
+            print(f"  would write content/posts/{note['slug']}.md")
         return 0
 
     # Regenerate from scratch so deletions in the vault propagate.
@@ -245,10 +235,7 @@ def main() -> int:
     for note in notes:
         name = note["path"].name
         body = convert_links(note["body"], index, assets, copied, name)
-        if note["home"]:
-            write_home(note, body)
-        else:
-            write_post(note, body)
+        write_post(note, body)
 
     print(f"Done. {len(copied)} attachment(s) copied.")
     return 0

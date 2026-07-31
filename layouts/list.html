@@ -39,8 +39,9 @@
 {{- end }}
 
 {{/* LOCAL OVERRIDE: PaperMod only renders socialIcons inside home_info.html,
-     which is gated on homeInfoParams. We drive the home intro from the vault's
-     05-Public/_index.md instead, so render the icons here directly. */}}
+     which is gated on homeInfoParams. This site has no landing page — the root
+     is the post list — so render the icons here directly instead. Delete this
+     block to drop the icons entirely. */}}
 {{- if and .IsHome site.Params.socialIcons }}
 <div class="home-social-icons">
   {{- partial "social_icons.html" (dict "align" "left") }}

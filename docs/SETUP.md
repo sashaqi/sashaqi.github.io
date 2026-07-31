@@ -101,6 +101,10 @@ gh run watch --repo sashaqi/sashaqi.github.io
 
 Anything in `05-Public/` publishes. The subfolder becomes the category.
 
+There is no landing page — the site root is the post list. An `_index.md` in
+`05-Public` is ignored, so you can delete
+`05-Public/_index.md` from the vault if you don't want it sitting there.
+
 ```markdown
 ---
 title: My Post Title

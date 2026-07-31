@@ -51,9 +51,9 @@ params:
   # Author byline under each post title, the way Lil'Log does it.
   ShowAuthor: true
 
-  # The homepage intro comes from 05-Public/_index.md in the vault, rendered
-  # by PaperMod as the home page's .Content. Deliberately not using
-  # homeInfoParams — this theme renders both, which would duplicate it.
+  # No landing page: the site root is the post list. That means no
+  # homeInfoParams and no content/_index.md — either one would render an
+  # intro block above the posts.
 
   socialIcons:
     - name: github
