@@ -1,0 +1,16 @@
+# Hugo build output
+/public/
+/resources/_gen/
+.hugo_build.lock
+
+# Generated from the vault by scripts/sync_vault.py — never commit.
+# Keeping these out of git history is what stops vault content from
+# becoming permanent in a public repo.
+/content/posts/
+/content/_index.md
+/static/images/
+
+# Local vault checkout used by CI
+/.vault/
+
+.DS_Store

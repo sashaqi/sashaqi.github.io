@@ -1,0 +1,123 @@
+baseURL: "https://sashaqi.github.io/"
+title: "Sasha Qi"
+theme: PaperMod
+
+locale: en-us
+hasCJKLanguage: true
+enableInlineShortcodes: true
+enableRobotsTXT: true
+buildDrafts: false
+buildFuture: false
+buildExpired: false
+enableEmoji: true
+pygmentsUseClasses: true
+
+# PaperMod's search page needs the JSON index.
+outputs:
+  home:
+    - HTML
+    - RSS
+    - JSON
+
+pagination:
+  pagerSize: 10
+
+minify:
+  disableXML: true
+
+params:
+  env: production
+  title: "Sasha Qi"
+  description: "Notes on machine learning, systems, and the things I'm figuring out."
+  author: "Sasha Qi"
+  keywords: [blog, machine learning, AI, engineering]
+  DateFormat: "January 2, 2006"
+  defaultTheme: auto
+  ShowShareButtons: false
+  ShowReadingTime: true
+  ShowWordCount: false
+  ShowPostNavLinks: true
+  ShowBreadCrumbs: true
+  ShowCodeCopyButtons: true
+  ShowToc: true
+  TocOpen: false
+  ShowRssButtonInSectionTermList: true
+  displayFullLangName: true
+  disableScrollToTop: false
+  hidemeta: false
+  hideSummary: false
+  comments: false
+
+  # Author byline under each post title, the way Lil'Log does it.
+  ShowAuthor: true
+
+  # The homepage intro comes from 05-Public/_index.md in the vault, rendered
+  # by PaperMod as the home page's .Content. Deliberately not using
+  # homeInfoParams — this theme renders both, which would duplicate it.
+
+  socialIcons:
+    - name: github
+      title: GitHub
+      url: "https://github.com/sashaqi"
+    - name: rss
+      title: RSS
+      url: "index.xml"
+
+  assets:
+    disableHLJS: true
+    favicon: "/favicon.ico"
+
+  fuseOpts:
+    isCaseSensitive: false
+    shouldSort: true
+    location: 0
+    distance: 1000
+    threshold: 0.4
+    minMatchCharLength: 0
+    keys: ["title", "permalink", "summary", "content"]
+
+menu:
+  main:
+    - identifier: posts
+      name: Posts
+      url: /posts/
+      weight: 10
+    - identifier: archives
+      name: Archive
+      url: /archives/
+      weight: 20
+    - identifier: search
+      name: Search
+      url: /search/
+      weight: 30
+    - identifier: tags
+      name: Tags
+      url: /tags/
+      weight: 40
+
+taxonomies:
+  tag: tags
+  category: categories
+
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+    extensions:
+      passthrough:
+        enable: true
+        delimiters:
+          block:
+            - ["\\[", "\\]"]
+            - ["$$", "$$"]
+          inline:
+            - ["\\(", "\\)"]
+  highlight:
+    noClasses: false
+    codeFences: true
+    guessSyntax: true
+    lineNos: false
+    style: monokai
+  tableOfContents:
+    startLevel: 2
+    endLevel: 4
