@@ -1,119 +1,42 @@
 # Setup
 
-One-time wiring. Everything after this is automatic: write in Obsidian,
-obsidian-git pushes the vault, the site rebuilds.
-
 ## How it fits together
 
 ```
 Obsidian (05-Public/)
-    │  obsidian-git auto-commit + push
-    ▼
-sashaqi/obsidian-stardust  (private)
-    │  .github/workflows/publish.yml → repository_dispatch
+    │  ./scripts/publish.sh   — sync, review, commit, push
     ▼
 sashaqi/sashaqi.github.io  (public, this repo)
-    │  deploy.yml: sparse-checkout vault → sync_vault.py → hugo → Pages
+    │  .github/workflows/deploy.yml — hugo build → Pages
     ▼
 https://sashaqi.github.io
 ```
 
-The vault's markdown is never committed to the public repo. CI checks it out
-at build time and publishes only the rendered HTML, so nothing lands in public
-git history.
+`content/posts/` is committed to this repo, so CI needs no vault access and
+no secrets at all.
 
-## 1. Authenticate gh
+> **Trade-off to be aware of:** the markdown of every published post lands in
+> this public repo's git history permanently. If a private note is ever synced
+> by mistake, deleting the file later does **not** remove it from history —
+> that needs a history rewrite. `publish: false` in a note's frontmatter is the
+> main guard.
 
-```bash
-gh auth login
-```
+## Publishing
 
-## 2. Create one fine-grained PAT
-
-<https://github.com/settings/personal-access-tokens/new>
-
-- **Repository access** → Only select repositories → pick **both**
-  `obsidian-stardust` and `sashaqi.github.io`
-- **Permissions** → Repository permissions → **Contents: Read and write**
-  (read is what pulls the vault; write is what the dispatch API requires)
-- Expiration: 1 year
-
-Copy the token, then:
+Write in Obsidian under `05-Public/`, then:
 
 ```bash
-gh secret set VAULT_TOKEN --repo sashaqi/sashaqi.github.io
+./scripts/publish.sh
 ```
 
-```bash
-gh secret set SITE_DISPATCH_TOKEN --repo sashaqi/obsidian-stardust
-```
+It syncs the vault, shows exactly which files would change, and asks before
+pushing. CI builds and deploys in about a minute.
 
-Both prompt for the value — paste the same token into each.
-
-## 3. Push this site to a new `main` branch
-
-Keep the repo name. A GitHub **user page** only serves at
-`https://sashaqi.github.io` from a repo literally named `sashaqi.github.io`,
-so renaming it to something like `deprecated-...` would take the site offline.
-Replacing its default branch is the way to retire the Quartz version.
-
-The Quartz site stays on branch `v5` for now, so rollback is one command
-(see the bottom of this file). Delete that branch once you're happy:
-
-```bash
-git push origin --delete v5
-```
-
-```bash
-git remote add origin https://github.com/sashaqi/sashaqi.github.io.git
-```
-
-```bash
-git push -u origin main
-```
-
-Then make `main` the default and point Pages at Actions:
-
-```bash
-gh api -X PATCH repos/sashaqi/sashaqi.github.io -f default_branch=main
-```
-
-```bash
-gh api -X POST repos/sashaqi/sashaqi.github.io/pages -f build_type=workflow || gh api -X PUT repos/sashaqi/sashaqi.github.io/pages -f build_type=workflow
-```
-
-## 4. Add the trigger to the vault repo
-
-```bash
-mkdir -p "$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/obsidian-stardust/.github/workflows"
-```
-
-```bash
-cp docs/vault-workflow-publish.yml "$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/obsidian-stardust/.github/workflows/publish.yml"
-```
-
-Commit and push it from the vault (or let obsidian-git do it).
-
-## 5. Verify
-
-```bash
-gh workflow run "Build and deploy site" --repo sashaqi/sashaqi.github.io
-```
-
-```bash
-gh run watch --repo sashaqi/sashaqi.github.io
-```
-
----
+Add `--yes` to skip the confirmation.
 
 ## Writing posts
 
 Anything in `05-Public/` publishes. The subfolder becomes the category.
-
-The landing block at the top of the home page (heading, intro line, social
-icons) is **not** written in Obsidian — it lives in `hugo.yaml` under
-`params.homeInfoParams`, because PaperMod reads it from site config. Edit it
-there. `05-Public/_index.md` is ignored and can be deleted from the vault.
 
 ```markdown
 ---
@@ -130,6 +53,11 @@ tags:
 - `summary` — optional, overrides the auto-generated excerpt
 - `publish: false` — keep a note in `05-Public` without publishing it
 
+The landing block at the top of the home page (heading, intro line, social
+icons) is **not** written in Obsidian — it lives in `hugo.yaml` under
+`params.homeInfoParams`, because PaperMod reads it from site config. Edit it
+there. `05-Public/_index.md` is ignored and can be deleted from the vault.
+
 ### Wikilinks
 
 - `[[Some Post]]` → a real link, if that note is also published
@@ -141,10 +69,9 @@ tags:
 
 Only attachments actually referenced by a published post get copied.
 
-> **The one thing to watch:** `05-Public` is a publish queue, not a draft
-> folder. Anything you put there goes live on the next push. Use
-> `publish: false` for work in progress, or draft in `00-Inbox` and move it
-> over when it's ready.
+> `05-Public` is a publish queue, not a draft folder. Anything you put there
+> goes live on the next `publish.sh`. Use `publish: false` for work in
+> progress, or draft in `00-Inbox` and move it over when it's ready.
 
 ## Local preview
 
@@ -152,8 +79,23 @@ Only attachments actually referenced by a published post get copied.
 ./scripts/dev.sh
 ```
 
-## Rollback
+Serves at <http://localhost:1313> without touching git.
+
+## Repo notes
+
+The repo name must stay `sashaqi.github.io` — a GitHub user page only serves
+at that URL from a repo with that exact name. Renaming it takes the site
+offline. The Quartz version was retired by replacing the default branch, not
+by renaming.
+
+The old Quartz site is still on branch `v5`. Roll back with:
 
 ```bash
 gh api -X PATCH repos/sashaqi/sashaqi.github.io -f default_branch=v5
+```
+
+Delete it once you're happy:
+
+```bash
+git push origin --delete v5
 ```
