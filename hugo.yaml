@@ -60,7 +60,7 @@ params:
   # suppresses the special uncarded first entry — keep both together.
   homeInfoParams:
     Title: "👋 Welcome to sasha.md"
-    Content: "Hi, this is Sasha Qi."
+    Content: "Hi, this is Sasha Qi. Notes on machine learning, systems, and the things I'm figuring out."
 
   # Redundant while homeInfoParams is set, but explicit so that removing the
   # landing block later doesn't silently un-card the first post again.
@@ -68,6 +68,12 @@ params:
 
   # Rendered by home_info.html under the intro, and reused by the RSS link.
   socialIcons:
+    - name: x
+      title: X
+      url: "https://x.com/SashaStardust7"
+    - name: linkedin
+      title: LinkedIn
+      url: "https://www.linkedin.com/in/xiaoxiao-sasha-qi-phd-b4a96680/"
     - name: github
       title: GitHub
       url: "https://github.com/sashaqi"
