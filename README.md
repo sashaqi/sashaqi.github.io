@@ -3,7 +3,6 @@
 Personal site. Hugo + [PaperMod](https://github.com/adityatelange/hugo-PaperMod),
 published automatically from the `05-Public` folder of a private Obsidian vault.
 
-Same stack as [lilianweng.github.io](https://lilianweng.github.io).
 
 ## Layout
 
