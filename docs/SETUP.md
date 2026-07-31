@@ -52,8 +52,17 @@ Both prompt for the value — paste the same token into each.
 
 ## 3. Push this site to a new `main` branch
 
-The existing Quartz site lives on branch `v5`. This leaves it untouched, so
-you can roll back by switching the default branch back.
+Keep the repo name. A GitHub **user page** only serves at
+`https://sashaqi.github.io` from a repo literally named `sashaqi.github.io`,
+so renaming it to something like `deprecated-...` would take the site offline.
+Replacing its default branch is the way to retire the Quartz version.
+
+The Quartz site stays on branch `v5` for now, so rollback is one command
+(see the bottom of this file). Delete that branch once you're happy:
+
+```bash
+git push origin --delete v5
+```
 
 ```bash
 git remote add origin https://github.com/sashaqi/sashaqi.github.io.git
