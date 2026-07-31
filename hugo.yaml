@@ -54,6 +54,11 @@ params:
   # No landing page: the site root is the post list. That means no
   # homeInfoParams and no content/_index.md — either one would render an
   # intro block above the posts.
+  #
+  # PaperMod renders the first entry uncarded unless homeInfoParams or this
+  # flag is set. Since we dropped homeInfoParams, set it explicitly so every
+  # entry gets the same card treatment.
+  disableSpecial1stPost: true
 
   socialIcons:
     - name: github
