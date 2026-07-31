@@ -101,9 +101,10 @@ gh run watch --repo sashaqi/sashaqi.github.io
 
 Anything in `05-Public/` publishes. The subfolder becomes the category.
 
-There is no landing page — the site root is the post list. An `_index.md` in
-`05-Public` is ignored, so you can delete
-`05-Public/_index.md` from the vault if you don't want it sitting there.
+The landing block at the top of the home page (heading, intro line, social
+icons) is **not** written in Obsidian — it lives in `hugo.yaml` under
+`params.homeInfoParams`, because PaperMod reads it from site config. Edit it
+there. `05-Public/_index.md` is ignored and can be deleted from the vault.
 
 ```markdown
 ---
