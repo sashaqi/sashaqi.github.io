@@ -34,7 +34,9 @@ params:
   DateFormat: "January 2, 2006"
   defaultTheme: auto
   ShowShareButtons: true
-  # Same set, same order, as the footer of a Lil'Log post.
+  # Only these eight are supported: twitter, x, linkedin, reddit, facebook,
+  # whatsapp, telegram, ycombinator. Anything else is silently dropped —
+  # these are "share this post to" targets, so github isn't one of them.
   ShareButtons: [twitter, linkedin, reddit, facebook, whatsapp, telegram]
   ShowReadingTime: true
   ShowWordCount: false
@@ -69,9 +71,9 @@ params:
     - name: github
       title: GitHub
       url: "https://github.com/sashaqi"
-    - name: rss
-      title: RSS
-      url: "index.xml"
+    # - name: rss
+    #   title: RSS
+    #   url: "index.xml"
 
   assets:
     disableHLJS: true
