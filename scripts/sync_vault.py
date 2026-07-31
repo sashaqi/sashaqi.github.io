@@ -148,7 +148,8 @@ def convert_links(body: str, index: dict, assets: dict, copied: set, note_name: 
     def replace(match: re.Match) -> str:
         embed, target, heading, alias = match.groups()
         target = target.strip()
-        label = (alias or target).strip()
+        # Obsidian displays only the note name for path-style links.
+        label = (alias or target.split("/")[-1]).strip()
 
         if embed:
             asset = assets.get(target.lower())
