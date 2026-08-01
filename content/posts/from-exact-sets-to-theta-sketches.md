@@ -1,5 +1,5 @@
 ---
-title: From Exact Sets to Sketches
+title: From Exact Sets to Theta Sketches
 date: '2026-01-31'
 draft: false
 tags:
@@ -9,7 +9,8 @@ tags:
 - Data Engineering
 categories:
 - Technology
-author: Sasha Qi, ChatGPT
+author:
+- Sasha Qi
 ---
 
 ## 1. An Audience Builder That Won't Stop Spinning
