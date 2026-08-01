@@ -191,7 +191,8 @@ def write_post(note: dict, body: str) -> None:
     categories = as_list(meta.get("categories")) or ([note["section"]] if note["section"] else [])
     if categories:
         front["categories"] = categories
-    for key in ("summary", "description", "cover", "weight", "aliases", "math"):
+    for key in ("author", "summary", "description", "cover", "weight",
+                "aliases", "math"):
         if meta.get(key) is not None:
             front[key] = meta[key]
 

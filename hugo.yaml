@@ -29,7 +29,9 @@ params:
   env: production
   title: "Sasha Qi"
   description: "Notes on machine learning, systems, and the things I'm figuring out."
-  author: "Sasha Qi"
+  # A list renders as "Sasha Qi, ChatGPT". Any note can override this with its
+  # own `author:` in frontmatter — use a plain string for a single author.
+  author: ["Sasha Qi", "ChatGPT"]
   keywords: [blog, machine learning, AI, engineering]
   DateFormat: "January 2, 2006"
   defaultTheme: auto
