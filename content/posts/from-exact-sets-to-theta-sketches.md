@@ -19,7 +19,7 @@ aliases:
 
 ### 1.1 The scene
 
-A product manager checks the first box in an audience builder: *installed the app in the last 30 days*. The UI spins for 12 seconds and returns "estimated reach: 4.7M."
+A product manager sends a query to an audience builder: *installed the app in the last 30 days*. The UI spins for 12 seconds and returns "estimated reach: 4.7M."
 
 He adds a second condition: *and purchased product A*. Another 15 seconds.
 
