@@ -11,6 +11,8 @@ categories:
 - Technology
 author:
 - Sasha Qi
+aliases:
+- /posts/from-exact-sets-to-sketches/
 ---
 
 ## 1. An Audience Builder That Won't Stop Spinning
