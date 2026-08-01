@@ -33,7 +33,7 @@ The root cause is that deduplication is inherently incompressible. Summing order
 
 ### 1.2 This product actually exists: AppsFlyer Audiences Segmentation
 
-The scene above is not hypothetical. AppsFlyer's Audiences Segmentation product does exactly this: advertisers define an audience by dragging conditions in a UI, the system returns an estimated size in real time, and once the number looks right the audience is materialized into an actual targeting list (Cohen, 2020).
+The scene above is not hypothetical. AppsFlyer's Audiences Segmentation product does exactly this: advertisers define an audience by dragging conditions in a UI, the system returns an estimated size in real time, and once the number looks right the audience is materialized into an actual targeting list ([Cohen, 2020](https://medium.com/appsflyerengineering/applied-probability-counting-large-set-of-unstructured-events-with-theta-sketches-b1464cd16c9a)).
 
 The scale: roughly 100 billion events ingested per day.
 
@@ -49,13 +49,13 @@ Translated into data-structure terms, this is a tree. Leaves are atomic conditio
 
 ![AppsFlyer audience builder and its corresponding tree structure](https://d2908q01vomqb2.cloudfront.net/b6692ea5df920cad691c20319a6fffd7a4a766b8/2024/08/01/BDB-3551-1-1.png)
 
-*Figure 1: Conditions defined in the UI and the set-operation tree they translate into. Source: Pelts et al., 2024*
+*Figure 1: Conditions defined in the UI and the set-operation tree they translate into. Source: [Pelts et al., 2024](https://aws.amazon.com/blogs/big-data/how-appsflyer-modernized-their-interactive-workload-by-moving-to-amazon-athena-and-saved-80-of-costs/)*
 
 Those two words — *set operations* — are the dividing line for everything that follows.
 
 ### 1.3 Why HyperLogLog isn't enough
 
-Anyone who has done large-scale distinct counting knows HyperLogLog (HLL). Introduced by Flajolet et al. (2007), it has been the default answer in this space for two decades.
+Anyone who has done large-scale distinct counting knows HyperLogLog (HLL). Introduced by [Flajolet et al. (2007)](https://dmtcs.episciences.org/3545), it has been the default answer in this space for two decades.
 
 The idea: hash each element into a bit string and look at how many consecutive zeros it starts with. If you see a string starting with 20 zeros among a pile of random bit strings, you have probably seen about 2²⁰ distinct elements, because that pattern occurs with probability 2⁻²⁰. HLL distributes elements across many buckets, stores only the longest run of leading zeros seen per bucket, and takes a harmonic mean at the end.
 
@@ -73,7 +73,7 @@ So the selection problem becomes clear: we need something as compact as HLL and 
 
 ### 2.1 Structure and estimator
 
-A Theta Sketch is a hash set with a capacity ceiling. Its theoretical framework is due to Dasgupta et al. (2016), and the core idea traces back to the earlier KMV (K Minimum Values) sketch (Bar-Yossef et al., 2002).
+A Theta Sketch is a hash set with a capacity ceiling. Its theoretical framework is due to [Dasgupta et al. (2016)](https://arxiv.org/abs/1510.01455), and the core idea traces back to the earlier KMV (K Minimum Values) sketch ([Bar-Yossef et al., 2002](https://link.springer.com/chapter/10.1007/3-540-45726-7_1)).
 
 Exact deduplication is usually done with a `HashSet<long>`: hash each incoming user ID, insert it, and read the size at the end. The problem is that the set grows without bound.
 
@@ -117,7 +117,7 @@ This is where Theta Sketch differs from HLL.
 
 **Difference.** Remove from A's hash values those present in B, then extrapolate with the common θ.
 
-Reducing to a single common θ is the shared precondition for all three: the inverse-probability estimator is unbiased only when both sides are sampled from the same probability space. This also explains the pitfall in §5.1 — when two sketches have very different θ values, the common threshold is dragged down to the lower one and the effective sample size of the intersection collapses.
+Reducing to a single common θ is the shared precondition for all three: the inverse-probability estimator is unbiased only when both sides are sampled from the same probability space. This also explains the pitfall in [§5.1](#51-intersection-error-gets-amplified) — when two sketches have very different θ values, the common threshold is dragged down to the lower one and the effective sample size of the intersection collapses.
 
 ### 2.4 Preconditions and limits
 
@@ -149,7 +149,7 @@ Two design principles pull in opposite directions. The slice key must cover ever
 
 One problem must be handled explicitly: dimension-value explosion. If an attribute's cardinality approaches the event count — for example, when a millisecond timestamp is reported as an event attribute — each cell ends up holding a single record and the whole design collapses: the number of sketches explodes, every sketch degenerates to exact mode, and scan ranges become unbounded.
 
-The remedy is to prune attributes in the pre-aggregation job using statistical criteria that filter out high-cardinality noise. AppsFlyer's criteria are: the attribute has fewer than 100 distinct values, and the ratio of distinct values to occurrences is below 0.1 (Cohen, 2020). Attributes that fail are ignored and excluded from slicing. Fundamentally this is storage cost control.
+The remedy is to prune attributes in the pre-aggregation job using statistical criteria that filter out high-cardinality noise. AppsFlyer's criteria are: the attribute has fewer than 100 distinct values, and the ratio of distinct values to occurrences is below 0.1 ([Cohen, 2020](https://medium.com/appsflyerengineering/applied-probability-counting-large-set-of-unstructured-events-with-theta-sketches-b1464cd16c9a)). Attributes that fail are ignored and excluded from slicing. Fundamentally this is storage cost control.
 
 ### 3.2 Building sketches offline
 
@@ -175,7 +175,7 @@ An exact approach that supports distinct counting over arbitrary dimension combi
 
 What matters here is not the compression ratio but the change in the *nature* of the cost model: **the cost of a sketch-based system is driven by the number of slice-key combinations, not by event volume.** Ten times the traffic barely changes sketch storage; but adding a few filterable dimensions to the product can multiply the combination count a hundredfold.
 
-For anyone doing capacity planning, this is a shift in mindset: once you adopt sketches, your storage budget is no longer determined by traffic — it is determined by the product's filter design. The attribute pruning in §3.1 is, at bottom, managing that budget.
+For anyone doing capacity planning, this is a shift in mindset: once you adopt sketches, your storage budget is no longer determined by traffic — it is determined by the product's filter design. The attribute pruning in [§3.1](#31-choosing-the-slice-key) is, at bottom, managing that budget.
 
 ---
 
@@ -198,7 +198,7 @@ The column to watch is sketch size. As cardinality grows from 100K to 10M — a 
 
 ### 4.2 Testing the error distribution
 
-The unsettling thing about approximate algorithms is not knowing how wrong any given answer is. Theta Sketch behaves well here: the estimator is unbiased (the long-run average converges to the truth, with no systematic skew in either direction) and the error distribution is close to normal (Apache DataSketches, 2025).
+The unsettling thing about approximate algorithms is not knowing how wrong any given answer is. Theta Sketch behaves well here: the estimator is unbiased (the long-run average converges to the truth, with no systematic skew in either direction) and the error distribution is close to normal ([Apache DataSketches, 2025](https://datasketches.apache.org/docs/Theta/ThetaAccuracy.html)).
 
 25 independent trials per k, true cardinality 200,000:
 
@@ -222,7 +222,7 @@ Observed error never exceeds the theoretical bound, mean error is close to zero,
 
 Three conclusions. Theta saves roughly 2,000× the space of the exact approach and is 3× faster to build. Theta is *not* the cheapest — at comparable parameters HLL is 9.6× smaller and was more accurate in this run. And the entire reason Theta exists is the last column.
 
-This table confirms the selection logic from §1.3: if the business only needs unions, choose HLL; the 10× size premium is only worth paying when you need intersection and difference.
+This table confirms the selection logic from [§1.3](#13-why-hyperloglog-isnt-enough): if the business only needs unions, choose HLL; the 10× size premium is only worth paying when you need intersection and difference.
 
 ### 4.4 Merge performance
 
@@ -233,7 +233,7 @@ Merging 100 daily sketches (5 million records total) into one:
 | 16,384 | 8 ms | 5,041,781 | +0.84% | [4,963,589, 5,121,202] | Yes |
 | 65,536 | 27 ms | 5,016,124 | +0.32% | [4,977,304, 5,055,246] | Yes |
 
-Single-digit to low-double-digit milliseconds is what makes the "merge along the time dimension" step in §3.3 feasible at query time. Note that the union operator has its own k, which becomes an upper bound on the accuracy of the merged result — a point that resurfaces in §6.2.
+Single-digit to low-double-digit milliseconds is what makes the "merge along the time dimension" step in [§3.3](#33-two-level-aggregation-at-query-time) feasible at query time. Note that the union operator has its own k, which becomes an upper bound on the accuracy of the merged result — a point that resurfaces in [§6.2](#62-second-generation-s3--parquet--athena).
 
 ### 4.5 How set operations behave
 
@@ -265,7 +265,7 @@ This is where Theta Sketch most often goes wrong in production. Measured: a set 
 | 10,000,000 | 10,000 | 10,000 | 12,564 | +25.6% |
 | 10,000,000 | 1,000 | 1,000 | 2,094 | +109.4% |
 
-The cause is the common threshold from §2.3. A's θ has been driven extremely low — roughly one in ten thousand elements retained — so the intersection can only be built on that very sparse sample, and the small set may have no sampled elements at all.
+The cause is the common threshold from [§2.3](#23-set-operations). A's θ has been driven extremely low — roughly one in ten thousand elements retained — so the intersection can only be built on that very sparse sample, and the small set may have no sampled elements at all.
 
 The mitigation is to raise k, but the cost is linear:
 
@@ -304,15 +304,15 @@ Back to the product from the opening. AppsFlyer's Audiences Segmentation has two
 
 ### 6.1 First generation: Spark + HBase
 
-The first generation worked like this: an Airflow-scheduled daily Spark job scanned the S3 data lake, built sketches by slice key, and bulk-loaded them into HBase; an API service queried HBase, retrieved the sketches, and performed set operations in the application layer (Cohen, 2020).
+The first generation worked like this: an Airflow-scheduled daily Spark job scanned the S3 data lake, built sketches by slice key, and bulk-loaded them into HBase; an API service queried HBase, retrieved the sketches, and performed set operations in the application layer ([Cohen, 2020](https://medium.com/appsflyerengineering/applied-probability-counting-large-set-of-unstructured-events-with-theta-sketches-b1464cd16c9a)).
 
 ![First-generation architecture: Spark builds sketches, loads into HBase, API service queries](https://d2908q01vomqb2.cloudfront.net/b6692ea5df920cad691c20319a6fffd7a4a766b8/2024/08/01/BDB-3551-2-1.png)
 
-*Figure 2: First-generation architecture. Source: Pelts et al., 2024*
+*Figure 2: First-generation architecture. Source: [Pelts et al., 2024](https://aws.amazon.com/blogs/big-data/how-appsflyer-modernized-their-interactive-workload-by-moving-to-amazon-athena-and-saved-80-of-costs/)*
 
 HBase matched the access pattern: writes are daily bulk loads, reads are point lookups and short range scans, and the data is schemaless with extremely sparse columns. HBase's sparse column model and lexicographic row-key scans fit well.
 
-**Accuracy in production**, measured across a sample of 7,000 real-world queries against exact audience sizes computed offline (Cohen, 2020):
+**Accuracy in production**, measured across a sample of 7,000 real-world queries against exact audience sizes computed offline ([Cohen, 2020](https://medium.com/appsflyerengineering/applied-probability-counting-large-set-of-unstructured-events-with-theta-sketches-b1464cd16c9a)):
 
 | Metric | Value |
 |---|---|
@@ -329,21 +329,21 @@ HBase matched the access pattern: writes are daily bulk loads, reads are point l
 
 At the time of writing — after three years of uptime — the HBase deployment spanned 50 nodes and stored 15 TB, mostly sketches.
 
-The number worth pausing on is that 6% average error, far above the ~1% theoretical error of a single sketch. This is the §5.1 phenomenon showing up in real workloads: multi-level set operations accumulate and amplify error at each step. It makes one thing explicit — laboratory accuracy and production accuracy are not the same thing, and an end-to-end error evaluation against the real query distribution is necessary before launch.
+The number worth pausing on is that 6% average error, far above the ~1% theoretical error of a single sketch. This is the [§5.1](#51-intersection-error-gets-amplified) phenomenon showing up in real workloads: multi-level set operations accumulate and amplify error at each step. It makes one thing explicit — laboratory accuracy and production accuracy are not the same thing, and an end-to-end error evaluation against the real query distribution is necessary before launch.
 
 ### 6.2 Second generation: S3 + Parquet + Athena
 
-Roughly three years later the workload had grown to 23 TB, the HBase architecture was struggling to meet latency SLAs, and operational cost was high. The team rebuilt it: remove HBase entirely, store sketches as Parquet files on S3, and query them directly with Amazon Athena (Pelts et al., 2024).
+Roughly three years later the workload had grown to 23 TB, the HBase architecture was struggling to meet latency SLAs, and operational cost was high. The team rebuilt it: remove HBase entirely, store sketches as Parquet files on S3, and query them directly with Amazon Athena ([Pelts et al., 2024](https://aws.amazon.com/blogs/big-data/how-appsflyer-modernized-their-interactive-workload-by-moving-to-amazon-athena-and-saved-80-of-costs/)).
 
 ![Second-generation architecture: HBase removed, Athena queries Parquet on S3](https://d2908q01vomqb2.cloudfront.net/b6692ea5df920cad691c20319a6fffd7a4a766b8/2024/08/01/BDB-3551-3-1.png)
 
-*Figure 3: Second-generation architecture. Source: Pelts et al., 2024*
+*Figure 3: Second-generation architecture. Source: [Pelts et al., 2024](https://aws.amazon.com/blogs/big-data/how-appsflyer-modernized-their-interactive-workload-by-moving-to-amazon-athena-and-saved-80-of-costs/)*
 
 Several representative problems came up during the migration.
 
 **Partition count explosion.** Keeping the date-plus-app-ID partitioning and scaling to 10,000 apps left 7.3 million partitions in the metadata catalog; loading partition metadata alone took 10–15 seconds during query planning. The fix was partition projection — instead of loading a partition list from the catalog, derive partitions on the fly from configured rules. The team identified this as the change that made the whole approach viable.
 
-**Merging early costs accuracy.** The team tried unioning 30 daily sketches into one monthly sketch to cut row count. Row count did drop by 97%, but the accuracy loss was unacceptable and the idea was dropped. This matches the observation in §4.4: the union operator's own k becomes a new accuracy ceiling. Mergeability is free; merging *early* is not — it also gives up the ability to drill back down to daily granularity.
+**Merging early costs accuracy.** The team tried unioning 30 daily sketches into one monthly sketch to cut row count. Row count did drop by 97%, but the accuracy loss was unacceptable and the idea was dropped. This matches the observation in [§4.4](#44-merge-performance): the union operator's own k becomes a new accuracy ceiling. Mergeability is free; merging *early* is not — it also gives up the ability to drill back down to daily granularity.
 
 **Result sets too large.** A single query could return millions of sketch rows, making result transfer the bottleneck. The team restructured the schema, splitting what had been multiple key-value combinations packed into one sketch, which substantially reduced result rows and improved overall query time by 90%.
 
@@ -381,8 +381,8 @@ Client libraries cover Java, C++, Python, Rust, and Go, with an interoperable bi
 Three recommendations:
 
 1. **If your data platform already supports it, don't build your own.** Sketches have many edge cases — empty sketches, the switch out of exact mode, seed validation, serialization version compatibility, sampling mode — and the official libraries handle them more reliably than a home-grown implementation.
-2. **Note that engines differ in which set operations they expose.** Some surface union, intersection, and difference fully in SQL; others provide only union and cardinality estimation, leaving intersection and difference to the application layer. The latter means shipping large volumes of sketch bytes back to the application — exactly the source of the oversized-result-set problem in §6.2. Factor this into the decision.
-3. **If you only need unions, don't use Theta.** Back to §4.3: at comparable parameters, HLL or CPC sketches are an order of magnitude smaller. Theta's size premium is only worth paying when intersection and difference are genuinely required.
+2. **Note that engines differ in which set operations they expose.** Some surface union, intersection, and difference fully in SQL; others provide only union and cardinality estimation, leaving intersection and difference to the application layer. The latter means shipping large volumes of sketch bytes back to the application — exactly the source of the oversized-result-set problem in [§6.2](#62-second-generation-s3--parquet--athena). Factor this into the decision.
+3. **If you only need unions, don't use Theta.** Back to [§4.3](#43-theta-vs-hll-vs-an-exact-set): at comparable parameters, HLL or CPC sketches are an order of magnitude smaller. Theta's size premium is only worth paying when intersection and difference are genuinely required.
 
 ---
 
@@ -600,14 +600,14 @@ for lgk in [14, 20]:
 
 **Algorithms and theory**
 
-- Bar-Yossef, Z., Jayram, T. S., Kumar, R., Sivakumar, D., & Trevisan, L. (2002). Counting distinct elements in a data stream. *RANDOM/APPROX 2002*.
-- Flajolet, P., Fusy, É., Gandouet, O., & Meunier, F. (2007). HyperLogLog: the analysis of a near-optimal cardinality estimation algorithm. *AofA 2007*.
-- Dasgupta, A., Lang, K., Rhodes, L., & Thaler, J. (2016). A framework for estimating stream expression cardinalities. *ICDT 2016*.
+- Bar-Yossef, Z., Jayram, T. S., Kumar, R., Sivakumar, D., & Trevisan, L. (2002). [Counting distinct elements in a data stream](https://link.springer.com/chapter/10.1007/3-540-45726-7_1). *RANDOM/APPROX 2002*.
+- Flajolet, P., Fusy, É., Gandouet, O., & Meunier, F. (2007). [HyperLogLog: the analysis of a near-optimal cardinality estimation algorithm](https://dmtcs.episciences.org/3545). *AofA 2007*.
+- Dasgupta, A., Lang, K., Rhodes, L., & Thaler, J. (2016). [A framework for estimating stream expression cardinalities](https://arxiv.org/abs/1510.01455). *ICDT 2016*.
 - Apache DataSketches. (2025). [Theta Sketch Framework](https://datasketches.apache.org/docs/Theta/ThetaSketchFramework.html) and [Basic Theta Sketch Accuracy](https://datasketches.apache.org/docs/Theta/ThetaAccuracy.html).
 
 **Production case studies**
 
-- Cohen, R. (2020). [Applied probability: counting large sets of unstructured events with Theta sketches](https://medium.com/appsflyerengineering/applied-probability-counting-large-set-of-unstructured-events-with-theta-sketches-b1464cd16c9a). *InfoQ / AppsFlyer Engineering*. (First-generation architecture: Spark + HBase; source of the accuracy and latency measurements in §6.1)
+- Cohen, R. (2020). [Applied probability: counting large sets of unstructured events with Theta sketches](https://medium.com/appsflyerengineering/applied-probability-counting-large-set-of-unstructured-events-with-theta-sketches-b1464cd16c9a). *InfoQ / AppsFlyer Engineering*. (First-generation architecture: Spark + HBase; source of the accuracy and latency measurements in [§6.1](#61-first-generation-spark--hbase))
 - Pelts, M., Kimchi, O., Safri, M., & Diamant, N. (2024). [How AppsFlyer modernized their interactive workload by moving to Amazon Athena and saved 80% of costs](https://aws.amazon.com/blogs/big-data/how-appsflyer-modernized-their-interactive-workload-by-moving-to-amazon-athena-and-saved-80-of-costs/). *AWS Big Data Blog*. (Second-generation architecture: S3 + Parquet + Athena; source of Figures 1–3)
 
 **Engine integration documentation**
