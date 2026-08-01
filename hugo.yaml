@@ -59,8 +59,8 @@ params:
   # PaperMod renders this via _partials/home_info.html, which is also what
   # suppresses the special uncarded first entry — keep both together.
   homeInfoParams:
-    Title: "👋 Welcome to sasha.md"
-    Content: "Hi, this is Sasha Qi. Notes on machine learning, systems, and the things I'm figuring out."
+    Title: "👋 Welcome to Sasha's log"
+    Content: "Hi, this is Sasha Qi. I document what I learn about machine learning, real-time bidding, neuroscience, software engineering, and anything else that sparks my curiosity."
 
   # Redundant while homeInfoParams is set, but explicit so that removing the
   # landing block later doesn't silently un-card the first post again.
