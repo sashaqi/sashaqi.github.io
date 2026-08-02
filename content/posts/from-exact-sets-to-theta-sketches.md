@@ -1,5 +1,5 @@
 ---
-title: From Exact Sets to Theta Sketches
+title: 'Theta Sketches: A Solution to Set Operations on Billions of Users'
 date: '2026-01-31'
 draft: false
 tags:
@@ -57,7 +57,7 @@ Those two words — *set operations* — are the dividing line for everything th
 
 Anyone who has done large-scale distinct counting knows HyperLogLog (HLL). Introduced by [Flajolet et al. (2007)](https://dmtcs.episciences.org/3545), it has been the default answer in this space for two decades.
 
-The idea: hash each element into a bit string and look at how many consecutive zeros it starts with. If you see a string starting with 20 zeros among a pile of random bit strings, you have probably seen about 2²⁰ distinct elements, because that pattern occurs with probability 2⁻²⁰. HLL distributes elements across many buckets, stores only the longest run of leading zeros seen per bucket, and takes a harmonic mean at the end.
+The idea: Hash each element to a fixed-length binary value and count the number of leading zeros. If you see a value starting with 20 zeros among a pile of random binary value, you have probably seen about 2²⁰ distinct elements, because that pattern occurs with probability 2⁻²⁰. HLL distributes elements across many buckets, stores only the longest run of leading zeros seen per bucket, and takes a harmonic mean at the end.
 
 The design is remarkably cheap. Each bucket needs only a few bits, so an HLL with 2¹⁴ buckets fits in 16 KB and estimates cardinalities in the hundreds of millions to within about 1%.
 
