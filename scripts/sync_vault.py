@@ -142,7 +142,25 @@ def collect_assets(vault_root: Path) -> dict[str, Path]:
     return assets
 
 
-def convert_links(body: str, index: dict, assets: dict, copied: set, note_name: str) -> str:
+def asset_dest_name(source: Path, taken: dict) -> str:
+    """Web-safe filename for a copied attachment.
+
+    Obsidian names pasted images "Pasted image 20260719171857.png". Spaces in a
+    markdown URL end the link target, so Goldmark renders the whole embed as
+    literal text and the image silently disappears. Slugify the stem instead of
+    percent-encoding, so the public URL stays readable.
+    """
+    slug = f"{slugify(source.stem)}{source.suffix.lower()}"
+    if taken.get(slug, source) != source:  # different file, same slug
+        n = 2
+        while taken.get(f"{slugify(source.stem)}-{n}{source.suffix.lower()}", source) != source:
+            n += 1
+        slug = f"{slugify(source.stem)}-{n}{source.suffix.lower()}"
+    taken[slug] = source
+    return slug
+
+
+def convert_links(body: str, index: dict, assets: dict, copied: dict, note_name: str) -> str:
     """Rewrite Obsidian wikilinks into Hugo-safe markdown."""
 
     def replace(match: re.Match) -> str:
@@ -154,12 +172,13 @@ def convert_links(body: str, index: dict, assets: dict, copied: set, note_name: 
         if embed:
             asset = assets.get(target.lower())
             if asset:
-                dest = STATIC_IMG_OUT / asset.name
-                if asset.name.lower() not in copied:
+                name = asset_dest_name(asset, copied)
+                dest = STATIC_IMG_OUT / name
+                if not dest.exists():
                     dest.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(asset, dest)
-                    copied.add(asset.name.lower())
-                return f"![{label}](/images/{asset.name})"
+                alt = alias.strip() if alias else asset.stem
+                return f"![{alt}](/images/{name})"
             # An embedded note (transclusion) — Hugo has no equivalent.
             url = index.get(target.lower())
             if url:
@@ -232,7 +251,7 @@ def main() -> int:
     if STATIC_IMG_OUT.exists():
         shutil.rmtree(STATIC_IMG_OUT)
 
-    copied: set[str] = set()
+    copied: dict[str, Path] = {}
     for note in notes:
         name = note["path"].name
         body = convert_links(note["body"], index, assets, copied, name)
