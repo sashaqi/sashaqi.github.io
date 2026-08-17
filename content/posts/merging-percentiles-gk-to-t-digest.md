@@ -74,3 +74,16 @@ The tail error isn't uniformly stable either. The t-digest paper measures relati
 *n=10⁶ samples from Uniform(0,1), δ=100. The right panel shows relative error; toward q→0, the curves climb rather than keep falling.*
 
 If what you need is a guarantee like "this number is within 5% of the true value," a structure built specifically for relative error, like DDSketch, is a better fit, at the cost of memory that scales with the dynamic range of the values rather than a fixed compression parameter δ [DDSketch, VLDB 2019](https://dl.acm.org/doi/abs/10.14778/3352063.3352135). The compression parameter itself still needs hand-tuning: turn it down and you save memory at the cost of accuracy, turn it up and accuracy improves at the cost of a bigger digest. The algorithm doesn't make that choice for you. What t-digest has going for it now is over a decade of production track record plus part of a formal proof added in 2019. What happens after a merge is still just a record, not a proof.
+
+---
+
+## References
+
+- Greenwald, M., & Khanna, S. (2001). *Space-Efficient Online Computation of Quantile Summaries*. SIGMOD 2001. [ACM DL](https://dl.acm.org/doi/10.1145/375663.375670)
+- Shrivastava, N., Buragohain, C., Agrawal, D., & Suri, S. (2004). *Medians and Beyond: New Aggregation Techniques for Sensor Networks*. SenSys 2004. [arXiv:cs/0408039](https://arxiv.org/abs/cs/0408039)
+- Dunning, T., & Ertl, O. (2019). *Computing Extremely Accurate Quantiles Using t-Digests*. [arXiv:1902.04023](https://arxiv.org/abs/1902.04023)
+- Cormode, G., Mishra, A., Ross, J., & Veselý, P. (2021). *Theory Meets Practice at the Median: A Worst Case Comparison of Relative Error Quantile Algorithms*. KDD 2021. [arXiv:2102.09299](https://arxiv.org/abs/2102.09299)
+- Masson, C., Rim, J. E., & Lee, H. K. (2019). *DDSketch: A Fast and Fully-Mergeable Quantile Sketch with Relative-Error Guarantees*. PVLDB 12(12). [ACM DL](https://dl.acm.org/doi/abs/10.14778/3352063.3352135)
+- Dunning, T. *t-digest*. Reference Java implementation. [GitHub](https://github.com/tdunning/t-digest)
+- Elastic. *Percentiles aggregation*. Elasticsearch Reference. [Docs](https://www.elastic.co/docs/reference/aggregations/search-aggregations-metrics-percentile-aggregation)
+- PrestoDB. *T-Digest Functions*. [Docs](https://prestodb.io/docs/current/functions/tdigest.html)
