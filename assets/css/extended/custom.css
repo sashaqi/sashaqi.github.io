@@ -1,0 +1,7 @@
+/* PaperMod gives .home-info (which reuses .first-entry) a 320px min-height and
+   centers its content vertically, so a short intro leaves a large empty band
+   between the header and the heading. Let it size to its content instead. */
+.main .home-info.first-entry {
+  min-height: auto;
+  margin-block: 8px 32px;
+}
